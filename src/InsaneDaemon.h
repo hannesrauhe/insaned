@@ -107,6 +107,9 @@ private:
     /// Timeout in ms to suspend main loop when device is busy
     static const int BUSY_TIMEOUT_MS;
 
+    /// Time in ms to sleep when scanner is offline
+    static const int OFF_SLEEP_MS;
+
     /// Singleton instance
     static InsaneDaemon mInstance;
 
@@ -212,7 +215,7 @@ private:
      *
      * @param name sensor name
      */
-    void process_event(std::string name);
+    void process_event(const std::string& nam, bool debounce = true);
 
     /**
      * Signal handler
