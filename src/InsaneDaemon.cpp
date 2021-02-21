@@ -73,6 +73,7 @@ InsaneDaemon::~InsaneDaemon() noexcept
 
 void InsaneDaemon::init(std::string device_name, std::string events_dir, int sleep_ms, int verbose, bool log_to_syslog, bool suspend_after_event)
 {
+    device_fixed = !device_name.empty();
     mCurrentDevice = device_name;
     mEventsDir = events_dir;
     mSleepMs = sleep_ms;
@@ -113,7 +114,7 @@ void InsaneDaemon::open(std::string device_name)
                          "devices are installed in your system, you should be able to see a list with\n"
                          "\"scanimage --list-devices\"." << std::endl;
         }
-        throw InsaneException("Failed to open device '" + device_name + "'");
+        throw InsaneException("Failed to open device '" + device_name + "'", InsaneErrorType::OPEN_DEVICE);
     }
     log("timer: sane_open: " + std::to_string(t.restart()) + " ms", 2);
 }
@@ -164,6 +165,21 @@ void InsaneDaemon::run()
                 }
             } catch (InsaneException & e) {
                 log(e.what(), 1);
+                if(e.type() == InsaneErrorType::OPEN_DEVICE)
+                {
+                    if (!device_fixed)
+                    {
+                        log("There is a problem with the device, will scan for devices again after a short wait", 2);
+                        // trigger the re-scaning of devices after opening failed
+                        mCurrentDevice.clear();
+                        mDevices.clear();
+                        mSuspendCount = BUSY_TIMEOUT_MS / mSleepMs;
+                    }
+                    else
+                    {
+                        log("Will continue trying to open " + mCurrentDevice, 2);
+                    }
+                }
             }
         } else {
             log("Reading sensors is suspended: " + std::to_string(mSuspendCount) + " events left", 2);

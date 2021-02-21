@@ -116,6 +116,9 @@ private:
     /// SANE version
     SANE_Int mVersionCode = 0;
 
+    /// device is set be the user
+    bool device_fixed = true;
+
     /// Device to use
     std::string mCurrentDevice = "";
 
